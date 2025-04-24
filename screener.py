@@ -54,7 +54,10 @@ log.info(f"Final dataset contains {len(df)} unique tickers")
 
 # ------------------- Google Sheets Export -------------------
 try:
-    creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
+    # Lee las credenciales del archivo que creaste con el comando echo
+    with open('creds.json', 'r') as f:
+        creds_dict = json.load(f)
+    
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
@@ -67,9 +70,6 @@ try:
 
     log.info("✅ Data successfully exported to Google Sheets")
 
-except gspread.exceptions.APIError as e:
-    log.error(f"Google Sheets API error: {e.response.text}")
 except Exception as e:
-    log.error("❌ Unexpected error occurred during export")
+    log.error(f"❌ Failed to export to Google Sheets: {e}")
     log.exception(e)
-
