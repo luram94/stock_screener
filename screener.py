@@ -53,8 +53,6 @@ df['Change'] = (df['Change'] * 100).round(2).astype(str) + '%'
 log.info(f"Final dataset contains {len(df)} unique tickers")
 
 # ------------------- Google Sheets Export -------------------
-log.info("Exporting to Google Sheets")
-
 try:
     creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS_JSON"])
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -63,10 +61,15 @@ try:
 
     spreadsheet = client.open("My Stock Screener")
     worksheet = spreadsheet.worksheet("Sheet1")
+
     worksheet.clear()
     set_with_dataframe(worksheet, df)
 
-    log.info("Data successfully exported to Google Sheets")
+    log.info("✅ Data successfully exported to Google Sheets")
 
+except gspread.exceptions.APIError as e:
+    log.error(f"Google Sheets API error: {e.response.text}")
 except Exception as e:
-    log.error(f"Failed to export to Google Sheets: {e}")
+    log.error("❌ Unexpected error occurred during export")
+    log.exception(e)
+
