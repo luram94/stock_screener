@@ -53,23 +53,65 @@ df['Change'] = (df['Change'] * 100).round(2).astype(str) + '%'
 log.info(f"Final dataset contains {len(df)} unique tickers")
 
 # ------------------- Google Sheets Export -------------------
+log.info("Starting Google Sheets export process")
+
 try:
-    # Lee las credenciales del archivo que creaste con el comando echo
-    with open('creds.json', 'r') as f:
-        creds_dict = json.load(f)
+    # Verifica que el archivo existe
+    log.info("Checking if credentials file exists")
+    if not os.path.exists('creds.json'):
+        log.error("❌ Credentials file 'creds.json' not found")
+        raise FileNotFoundError("Credentials file not found")
     
+    # Lee las credenciales del archivo
+    log.info("Reading credentials file")
+    with open('creds.json', 'r') as f:
+        creds_json = f.read()
+        log.info(f"Credentials file length: {len(creds_json)} characters")
+        creds_dict = json.loads(creds_json)
+    
+    # Define el alcance y crea las credenciales
+    log.info("Setting up Google API scope and credentials")
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+    
+    # Autoriza con las credenciales
+    log.info("Authorizing with Google using credentials")
     client = gspread.authorize(creds)
-
+    
+    # Intenta abrir la hoja de cálculo
+    log.info("Attempting to open spreadsheet 'My Stock Screener'")
     spreadsheet = client.open("My Stock Screener")
+    
+    # Intenta acceder a la hoja específica
+    log.info("Accessing worksheet 'Sheet1'")
     worksheet = spreadsheet.worksheet("Sheet1")
-
+    
+    # Limpia la hoja y exporta los datos
+    log.info("Clearing previous data from worksheet")
     worksheet.clear()
+    
+    log.info(f"Exporting dataframe with {len(df)} rows to Google Sheets")
     set_with_dataframe(worksheet, df)
-
+    
     log.info("✅ Data successfully exported to Google Sheets")
 
+except FileNotFoundError as e:
+    log.error(f"❌ File error: {e}")
+except json.JSONDecodeError as e:
+    log.error(f"❌ JSON parsing error: {e}")
+    log.error("Please check that your credentials JSON is properly formatted")
+except gspread.exceptions.SpreadsheetNotFound as e:
+    log.error(f"❌ Spreadsheet 'My Stock Screener' not found: {e}")
+    log.error("Make sure the spreadsheet exists and is shared with the service account email")
+except gspread.exceptions.WorksheetNotFound as e:
+    log.error(f"❌ Worksheet 'Sheet1' not found: {e}")
+    log.error("Make sure the worksheet 'Sheet1' exists in your spreadsheet")
+except gspread.exceptions.APIError as e:
+    log.error(f"❌ Google API error: {e}")
+    if hasattr(e, 'response') and e.response:
+        log.error(f"Response details: {e.response.text}")
 except Exception as e:
-    log.error(f"❌ Failed to export to Google Sheets: {e}")
+    log.error(f"❌ Unexpected error during export: {str(e)}")
     log.exception(e)
+
+log.info("Script execution completed")
