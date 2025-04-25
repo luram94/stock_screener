@@ -2,7 +2,7 @@ name: Daily Stock Screener to Google Sheets
 
 on:
   schedule:
-    - cron: '0 8 * * *'  # Every day at 8:00 UTC
+    - cron: '35 10 * * *'  # Every day at 8:00 UTC
   workflow_dispatch:  # Also allow manual trigger
 
 jobs:
