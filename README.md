@@ -32,7 +32,7 @@ This project is a daily stock screener that filters financial data from [Finviz]
 
 ### Step 1: Clone This Repository
 ```bash
-git clone https://github.com/yourusername/stock-screener.git
+git clone https://github.com/luram94/stock-screener.git
 cd stock-screener
 ```
 
